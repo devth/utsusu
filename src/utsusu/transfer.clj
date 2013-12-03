@@ -61,7 +61,9 @@
 (defn clone-repo [{:keys [name git_url] :as repo}]
   (let [path (path-for-repo repo)]
     (println "Cloning" git_url "into" path)
-    (git "clone" "--mirror" git_url path)
+    (let [clone (git "clone" "--mirror" git_url path {:verbose true})]
+      (when-not (= 0 @(:exit-code clone))
+        (throw (Exception. (str "failed clone: " (:stderr clone))))))
     (println (trim (du "-hs" :dir path))))
   repo)
 
