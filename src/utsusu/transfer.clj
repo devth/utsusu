@@ -20,6 +20,8 @@
 (def ^:dynamic auth)
 (def ^:dynamic endpoint)
 
+(def success-count (atom 0))
+
 (defmacro with-conf [prefix & body]
   `(binding [org (*config* (keyword (str (name ~prefix) "-org")))
              auth (mk-auth (*config* (keyword (str (name ~prefix) "-token"))))
@@ -51,10 +53,12 @@
         new-repo (if (= (:status new-repo) 422)
                    (do
                      (println "Error creating repo:" (-> new-repo :body :errors first :message))
-                     (println "Making sure it exists:")
-                     (let [res (r/specific-repo org name auth)]
-                       (println (:url res))
-                       res))
+                     (throw (ex-info "Error creating repo" {:type :new-repo-error :cause "Already exists"}))
+                     ; (println "Making sure it exists:")
+                     ; (let [res (r/specific-repo org name auth)]
+                     ;   (println (:url res))
+                     ;   res))
+                     )
                    new-repo)]
     (merge repo {:new-repo new-repo})))
 
@@ -127,10 +131,17 @@
       (println)
       (let [repo-fn (if (:dry-run config)
                       #(println "Would transfer" (:ssh_url %))
-                      (fn [repo] (-> repo create-repo clone-repo push-repo cleanup-repo)))]
+                      (fn [repo]
+                        (try
+                          (-> repo create-repo clone-repo push-repo cleanup-repo)
+                          (swap! success-count inc)
+                          (catch clojure.lang.ExceptionInfo e
+                            (when (= :new-repo-error (-> e ex-data :type))
+                              (println "Skipping...")
+                              (println))))))]
         (with-conf :dest (dorun (map repo-fn source-repos)))
         (when-not (:dry-run config)
-          (println "✓ Transfered" (count source-repos) "repos"))))
+          (println "✓ Transfered" @success-count "repos"))))
     (cleanup)
     (println)
     (println "GREAT SUCCESS")))

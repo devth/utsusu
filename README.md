@@ -11,6 +11,12 @@ The machine you run this on **must** have SSH access to all configured GitHub
 instances. The program will error and terminate if it can't clone from source or
 push to destination.
 
+## Existing repos
+
+If a repo on destination already exists for a given repo on source, it will be
+skipped and the script will continue. This allows restarts incase of network
+connectivity or other issues.
+
 ## Empty repos
 
 Make sure you don't have any empty repos on the source organization. This will
