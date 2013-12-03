@@ -5,4 +5,5 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :main "utsusu.core"
   :dependencies [[org.clojure/clojure "1.5.1"]
+                 [me.raynes/conch "0.5.0"]
                  [tentacles "0.2.6"]])

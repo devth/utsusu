@@ -1,15 +1,16 @@
 (ns utsusu.core
   (:require
+    [me.raynes.conch :refer [with-programs]]
     [clojure.edn :as edn]
     [clojure.string :as s]
     [utsusu.transfer :as t]))
 
 (def read-info
   {:source-domain "Source instance domain (github.com)"
-   :source-user "Source user or org"
+   :source-org "Source organization name"
    :source-token "Source API token"
    :dest-domain "Destination instance domain (github.com)"
-   :dest-user "Destination user or org"
+   :dest-org "Destination organization name"
    :dest-token "Destination API token"})
 
 (defn- validate-config [config]
@@ -34,5 +35,11 @@
                      (let [v (read-line)]
                        [k v]))))))))
 
+(defn- check-for-git []
+  (try
+    (with-programs [git] (git "--version"))
+    (catch Exception _ (throw (Exception. "git is required")))))
+
 (defn -main []
+  (check-for-git)
   (t/transfer (read-config)))
