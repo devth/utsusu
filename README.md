@@ -11,6 +11,12 @@ The machine you run this on **must** have SSH access to all configured GitHub
 instances. The program will error and terminate if it can't clone from source or
 push to destination.
 
+## Empty repos
+
+Make sure you don't have any empty repos on the source organization. This will
+cause the `git push` to destination to fail, which will abort the whole script.
+This could be handled (PRs welcome) if necessary.
+
 ## Configuration
 
 You may specify your configuration in a `config.edn` file at project root with
