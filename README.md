@@ -7,10 +7,11 @@ Enterprise instance.
 It currently does not support transfering between individual users (pull
 requests welcome).
 
-## Configuration
-
 The machine you run this on **must** have SSH access to all configured GitHub
-instances.
+instances. The program will error and terminate if it can't clone from source or
+push to destination.
+
+## Configuration
 
 You may specify your configuration in a `config.edn` file at project root with
 your settings. This is gitignored. If you do not, you'll be prompted for
