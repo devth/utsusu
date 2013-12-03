@@ -53,7 +53,7 @@ would be transferred.
 If you'd rather use utsusu as a library in your project:
 
 ```
-[utsusu "0.1.1"]
+[utsusu "0.1.2"]
 ```
 
 Configuration is read and validated in `utsusu.core` and all the actual work
