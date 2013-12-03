@@ -99,6 +99,10 @@
             (throw (Exception. (str "Could not connect to " fullname)))
             (println "✓ Connected to" fullname "at" url)))))))
 
+(defn cleanup []
+  (rm "-rf" temp-dir)
+  (println "Removed" temp-dir))
+
 (defn transfer
   "Transfer repos from source to destination, one at a time:
    1. Get a list of source repos
@@ -127,7 +131,7 @@
         (with-conf :dest (dorun (map repo-fn source-repos)))
         (when-not (:dry-run config)
           (println "✓ Transfered" (count source-repos) "repos"))))
-    (rm "-rf" temp-dir)
-    (println "Removed" temp-dir)
+    (cleanup)
     (println)
     (println "GREAT SUCCESS")))
+

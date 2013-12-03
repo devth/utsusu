@@ -64,5 +64,6 @@
                     (println)
                     {:dry-run true})))
     (catch Exception e
-      (println "ERROR:" (.getMessage e))))
+      (println "ERROR:" (.getMessage e))
+      (t/cleanup)))
   (shutdown-agents))
