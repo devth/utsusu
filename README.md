@@ -16,7 +16,7 @@ You may specify your configuration in a `config.edn` file at project root with
 your settings. This is gitignored. If you do not, you'll be prompted for
 configuration at runtime. Expected config file format:
 
-```
+```clojure
 {:source-domain "Source instance domain (github.com)"
  :source-org "Source organization name"
  :source-token "Source API token"
