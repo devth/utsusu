@@ -1,4 +1,4 @@
-(defproject utsusu "0.1.2-SNAPSHOT"
+(defproject utsusu "0.1.2"
   :description "A tool to transfer git repositories between GitHub and GitHub Enterprise"
   :url "https://github.com/devth/utsusu"
   :license {:name "Eclipse Public License"
