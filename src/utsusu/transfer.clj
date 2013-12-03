@@ -30,7 +30,7 @@
 (defn- endpoint-for [domain]
   (if (= domain "github.com")
     "https://api.github.com/"
-    (str "https://" domain "/api/v3")))
+    (str "https://" domain "/api/v3/")))
 
 (defn mk-auth [token] {:oauth-token token})
 
