@@ -40,7 +40,7 @@
 (defn path-for-repo [{:keys [name]}]
   (str temp-dir "/" name))
 
-(defn create-repo [{:keys [private name description homepage git_url] :as repo}]
+(defn create-repo [{:keys [private name description homepage] :as repo}]
   (println "Create repo" name)
   (let [new-repo (r/create-org-repo
                    org name
@@ -58,10 +58,10 @@
                    new-repo)]
     (merge repo {:new-repo new-repo})))
 
-(defn clone-repo [{:keys [name git_url] :as repo}]
+(defn clone-repo [{:keys [name ssh_url] :as repo}]
   (let [path (path-for-repo repo)]
-    (println "Cloning" git_url "into" path)
-    (let [clone (git "clone" "--mirror" git_url path {:verbose true})]
+    (println "Cloning" ssh_url "into" path)
+    (let [clone (git "clone" "--mirror" ssh_url path {:verbose true})]
       (when-not (= 0 @(:exit-code clone))
         (throw (Exception. (str "failed clone: " (:stderr clone))))))
     (println (trim (du "-hs" :dir path))))
