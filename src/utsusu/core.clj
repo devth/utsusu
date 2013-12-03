@@ -58,8 +58,8 @@
   (t/transfer (merge
                 (read-config)
                 (when (not-empty (intersection (set args) dry-run-flag))
-                  (println "-------")
+                  (println)
                   (println "DRY RUN")
-                  (println "-------")
+                  (println)
                   {:dry-run true})))
   (shutdown-agents))

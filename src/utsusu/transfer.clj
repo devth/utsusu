@@ -1,5 +1,6 @@
 (ns utsusu.transfer
   (:require
+    [clojure.string :refer [trim]]
     [me.raynes.conch :refer [programs]]
     [tentacles
      [users :as u]
@@ -61,7 +62,7 @@
   (let [path (path-for-repo repo)]
     (println "Cloning" git_url "into" path)
     (git "clone" "--mirror" git_url path)
-    (println (du "-hs" :dir path)))
+    (println (trim (du "-hs" :dir path))))
   repo)
 
 (defn push-repo [{:keys [new-repo name] :as repo}]
@@ -69,14 +70,15 @@
         dest-ssh-url (:ssh_url new-repo)]
     (println "Push" name "to" dest-ssh-url)
     (let [push (git "push" "--mirror" dest-ssh-url :dir path {:verbose true})]
-      (println ((:juxt :stdout :stderr) push))))
-  (println)
+      (println (trim ((:juxt :stdout :stderr) push)))))
   repo)
 
 (defn cleanup-repo [{:keys [new-repo name] :as repo}]
   (let [path (path-for-repo repo)]
     (println "Removing" path)
-    (rm "-rf" path)))
+    (println)
+    (rm "-rf" path))
+  repo)
 
 (defn specific-org [] (o/specific-org org auth))
 
@@ -104,11 +106,11 @@
     (let [source-repos (with-conf :source (repos))]
       (println)
       (println "Found" (count source-repos) "repos on source")
-      (println "For each repo, we will now:")
+      (println "For each repo, I will now:")
       (println " - create a repo of the same name on" (:dest-org config))
       (println " - git clone --mirror the repo into" temp-dir)
       (println " - git push --mirror to the new repo on" (:dest-org config))
-      (println " - rm -rf the repo we cloned")
+      (println " - rm -rf the local repo")
       (println "For the sake of log readability, this is all done in series rather than in parallel.")
       (println)
       (println "BEGIN TRANSFER")
@@ -117,9 +119,8 @@
                       #(println "Would transfer" (:ssh_url %))
                       (fn [repo] (-> repo create-repo clone-repo push-repo cleanup-repo)))]
         (with-conf :dest (dorun (map repo-fn source-repos)))
-        (println)
         (when-not (:dry-run config)
-          (println "✓ DONE: transfered" (count source-repos) "repos"))))
+          (println "✓ Transfered" (count source-repos) "repos"))))
     (rm "-rf" temp-dir)
     (println "Removed" temp-dir)
     (println)
