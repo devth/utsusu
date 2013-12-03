@@ -58,12 +58,15 @@
                    new-repo)]
     (merge repo {:new-repo new-repo})))
 
+(defn check-shell-status [sh-res]
+  (when-not (= 0 @(:exit-code sh-res))
+    (throw (Exception. (:stderr sh-res)))))
+
 (defn clone-repo [{:keys [name ssh_url] :as repo}]
   (let [path (path-for-repo repo)]
     (println "Cloning" ssh_url "into" path)
     (let [clone (git "clone" "--mirror" ssh_url path {:verbose true})]
-      (when-not (= 0 @(:exit-code clone))
-        (throw (Exception. (str "failed clone: " (:stderr clone))))))
+      (check-shell-status clone))
     (println (trim (du "-hs" :dir path))))
   repo)
 
@@ -72,6 +75,7 @@
         dest-ssh-url (:ssh_url new-repo)]
     (println "Push" name "to" dest-ssh-url)
     (let [push (git "push" "--mirror" dest-ssh-url :dir path {:verbose true})]
+      (check-shell-status push)
       (println (trim ((:juxt :stdout :stderr) push)))))
   repo)
 
