@@ -35,6 +35,17 @@ perform a full transfer of all repos from source to destination.
 `lein run -n` can be used to perform a dry run. It will list the repos that
 would be transferred.
 
+### As a library
+
+If you'd rather use utsusu as a library in your project:
+
+```
+[utsusu "0.1.0"]
+```
+
+Configuration is read and validated in `utsusu.core` and all the actual work
+happens in `utsusu.transfer` with the `transfer` function being the entry point.
+
 
 ## Reference
 
