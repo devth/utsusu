@@ -10,7 +10,7 @@
 
 (def temp-dir "/tmp/utsusu")
 (.mkdir (java.io.File. temp-dir))
-(programs git cd ls)
+(programs git du rm)
 
 (def ^:dynamic *config*)
 (def ^:dynamic org)
@@ -54,7 +54,8 @@
 (defn clone-repo [{:keys [name git_url] :as repo}]
   (let [path (str temp-dir "/" name)]
     (println "Cloning" git_url "into" path)
-    (git "clone" "--mirror" git_url path))
+    (git "clone" "--mirror" git_url path)
+    (println (du "-hs" :dir path)))
   repo)
 
 (defn push-repo [{:keys [new-repo name] :as repo}]
@@ -69,7 +70,7 @@
 (defn transfer
   "Transfer repos from source to destination, one at a time:
    1. Get a list of source repos
-   2. Create repos on destination with same name
+   2. Create repos on destination with same name, description and homepage
    3. Clone each source repo using `git clone --mirror origin-url`
    4. Push each source repo to destination using `git push --mirror destination-url`"
   [config]
@@ -85,4 +86,6 @@
                               clone-repo
                               push-repo))) source-repos))
       (println "☑ DONE: transfered" (count source-repos) "repos")))
+  (println "Removing" temp-dir)
+  (rm "-rf" temp-dir)
   (println "Config was:" config))
