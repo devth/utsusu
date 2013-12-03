@@ -1,0 +1,6 @@
+{:source-domain "Source instance domain (github.com)"
+ :source-org "Source organization name"
+ :source-token "Source API token"
+ :dest-domain "Destination instance domain (github.com)"
+ :dest-org "Destination organization name"
+ :dest-token "Destination API token"}
