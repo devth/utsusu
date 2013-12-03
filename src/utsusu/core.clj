@@ -55,11 +55,14 @@
 (defn -main [& args]
   (println welcome-string)
   (check-for-git)
-  (t/transfer (merge
-                (read-config)
-                (when (not-empty (intersection (set args) dry-run-flag))
-                  (println)
-                  (println "DRY RUN")
-                  (println)
-                  {:dry-run true})))
+  (try
+    (t/transfer (merge
+                  (read-config)
+                  (when (not-empty (intersection (set args) dry-run-flag))
+                    (println)
+                    (println "DRY RUN")
+                    (println)
+                    {:dry-run true})))
+    (catch Exception e
+      (println "ERROR:" (.getMessage e))))
   (shutdown-agents))
