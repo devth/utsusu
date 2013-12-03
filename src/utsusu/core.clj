@@ -1,5 +1,6 @@
 (ns utsusu.core
   (:require
+    [clojure.set :refer [intersection]]
     [me.raynes.conch :refer [with-programs]]
     [clojure.edn :as edn]
     [clojure.string :as s]
@@ -12,6 +13,15 @@
    :dest-domain "Destination instance domain (github.com)"
    :dest-org "Destination organization name"
    :dest-token "Destination API token"})
+
+(def welcome-string "
+        __                             
+ __ ___/  |_  ________ __  ________ __ 
+|  |  \\   __\\/  ___/  |  \\/  ___/  |  \\
+|  |  /|  |  \\___ \\|  |  /\\___ \\|  |  /
+|____/ |__| /____  >____//____  >____/ 
+                 \\/           \\/     
+                     ")
 
 (defn- validate-config [config]
   (into
@@ -40,6 +50,16 @@
     (with-programs [git] (git "--version"))
     (catch Exception _ (throw (Exception. "git is required")))))
 
-(defn -main []
+(def dry-run-flag #{"-n"})
+
+(defn -main [& args]
+  (println welcome-string)
   (check-for-git)
-  (t/transfer (read-config)))
+  (t/transfer (merge
+                (read-config)
+                (when (not-empty (intersection (set args) dry-run-flag))
+                  (println "-------")
+                  (println "DRY RUN")
+                  (println "-------")
+                  {:dry-run true})))
+  (shutdown-agents))

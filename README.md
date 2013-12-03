@@ -9,7 +9,7 @@ requests welcome).
 
 ## Configuration
 
-The machine you run this on **must** have access to all configured GitHub
+The machine you run this on **must** have SSH access to all configured GitHub
 instances.
 
 You may specify your configuration in a `config.edn` file at project root with
@@ -27,7 +27,13 @@ configuration at runtime. Expected config file format:
 
 ## Usage
 
-`lein run`
+`lein run` will read config from config.edn or prompt if missing. It will then
+perform a full transfer of all repos from source to destination.
+
+### Dry run
+
+`lein run -n` can be used to perform a dry run. It will list the repos that
+would be transferred.
 
 
 ## Reference

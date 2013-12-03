@@ -5,12 +5,14 @@
      [users :as u]
      [repos :as r]
      [events :as e]
+     [core :as tc]
      [data :as data]
      [orgs :as o]]))
 
+(programs git du rm)
 (def temp-dir "/tmp/utsusu")
 (.mkdir (java.io.File. temp-dir))
-(programs git du rm)
+
 
 (def ^:dynamic *config*)
 (def ^:dynamic org)
@@ -18,20 +20,24 @@
 (def ^:dynamic endpoint)
 
 (defmacro with-conf [prefix & body]
-  `(binding [org (*config* (keyword (str ~(name prefix) "-org")))
+  `(binding [org (*config* (keyword (str (name ~prefix) "-org")))
              auth (mk-auth (*config* (keyword (str (name ~prefix) "-token"))))
              endpoint (endpoint-for (*config* (keyword (str (name ~prefix) "-domain"))))]
-     ~@body))
+     (binding [tc/url endpoint]
+       ~@body)))
 
 (defn- endpoint-for [domain]
   (if (= domain "github.com")
-    "https://api.github.com"
+    "https://api.github.com/"
     (str "https://" domain "/api/v3")))
 
 (defn mk-auth [token] {:oauth-token token})
 
 (defn repos []
   (r/org-repos org (merge auth {:all-pages true})))
+
+(defn path-for-repo [{:keys [name]}]
+  (str temp-dir "/" name))
 
 (defn create-repo [{:keys [private name description homepage git_url] :as repo}]
   (println "Create repo" name)
@@ -52,7 +58,7 @@
     (merge repo {:new-repo new-repo})))
 
 (defn clone-repo [{:keys [name git_url] :as repo}]
-  (let [path (str temp-dir "/" name)]
+  (let [path (path-for-repo repo)]
     (println "Cloning" git_url "into" path)
     (git "clone" "--mirror" git_url path)
     (println (du "-hs" :dir path)))
@@ -67,6 +73,24 @@
   (println)
   repo)
 
+(defn cleanup-repo [{:keys [new-repo name] :as repo}]
+  (let [path (path-for-repo repo)]
+    (println "Removing" path)
+    (rm "-rf" path)))
+
+(defn specific-org [] (o/specific-org org auth))
+
+(defn ensure-connectivity []
+  (doall
+    (for [[prefix fullname] {:source "source" :dest "destination"}]
+      (do
+        (println "Ensuring" fullname "org connectivity:")
+        (let [o (with-conf prefix (specific-org))
+              url (:html_url o)]
+          (if (nil? url)
+            (throw (Exception. (str "Could not connect to " fullname)))
+            (println "✓ Connected to" fullname "at" url)))))))
+
 (defn transfer
   "Transfer repos from source to destination, one at a time:
    1. Get a list of source repos
@@ -74,18 +98,29 @@
    3. Clone each source repo using `git clone --mirror origin-url`
    4. Push each source repo to destination using `git push --mirror destination-url`"
   [config]
+  (println "Created" temp-dir)
   (binding [*config* config]
+    (ensure-connectivity)
     (let [source-repos (with-conf :source (repos))]
-      (println "Found" (count source-repos) "repos on source")
       (println)
-      (dorun
-        (map (fn [repo]
-               (with-conf :dest
-                          (-> repo
-                              create-repo
-                              clone-repo
-                              push-repo))) source-repos))
-      (println "☑ DONE: transfered" (count source-repos) "repos")))
-  (println "Removing" temp-dir)
-  (rm "-rf" temp-dir)
-  (println "Config was:" config))
+      (println "Found" (count source-repos) "repos on source")
+      (println "For each repo, we will now:")
+      (println " - create a repo of the same name on" (:dest-org config))
+      (println " - git clone --mirror the repo into" temp-dir)
+      (println " - git push --mirror to the new repo on" (:dest-org config))
+      (println " - rm -rf the repo we cloned")
+      (println "For the sake of log readability, this is all done in series rather than in parallel.")
+      (println)
+      (println "BEGIN TRANSFER")
+      (println)
+      (let [repo-fn (if (:dry-run config)
+                      #(println "Would transfer" (:ssh_url %))
+                      (fn [repo] (-> repo create-repo clone-repo push-repo cleanup-repo)))]
+        (with-conf :dest (dorun (map repo-fn source-repos)))
+        (println)
+        (when-not (:dry-run config)
+          (println "✓ DONE: transfered" (count source-repos) "repos"))))
+    (rm "-rf" temp-dir)
+    (println "Removed" temp-dir)
+    (println)
+    (println "GREAT SUCCESS")))
